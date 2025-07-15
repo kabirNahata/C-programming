@@ -2,6 +2,7 @@
 #include <string.h>
 
 #define MAX_STUDENTS 100
+#define DATA_FILE "students.dat"
 
 struct Student
 {
@@ -16,11 +17,14 @@ void viewStudents(const struct Student students[], int size);
 void searchStudent(const struct Student students[], int size);
 void deleteStudent(struct Student students[], int size);
 void menu(struct Student students[], int size);
+void saveStudentsToFile(const struct Student students[], int size);
+void loadStudentsFromFile(struct Student students[], int size);
 
 int main()
 {
     struct Student students[MAX_STUDENTS];
     initializeStudents(students, MAX_STUDENTS);
+    loadStudentsFromFile(students, MAX_STUDENTS);
     menu(students, MAX_STUDENTS);
     return 0;
 }
@@ -74,6 +78,7 @@ void menu(struct Student students[], int size)
                 break;
 
             case 5:
+                saveStudentsToFile(students, size);
                 printf("Exiting program. Goodbye!\n");
                 break;
             
@@ -131,6 +136,7 @@ void addStudent(struct Student students[], int size)
     students[index].course[strcspn(students[index].course, "\n")] = 0;
 
     printf("Student added successfully.\n");
+    saveStudentsToFile(students, size);
 }
 
 void viewStudents(const struct Student students[], int size)
@@ -197,7 +203,7 @@ void deleteStudent(struct Student students[], int size)
         while (getchar() != '\n'); // Clear input buffer
         return;
     }
-    getchar(); // Consume the newline character
+    getchar(); // remove the newline character
 
     int found_index = -1;
     for (int i = 0; i < size; i++)
@@ -221,9 +227,34 @@ void deleteStudent(struct Student students[], int size)
         strcpy(students[size - 1].course, "");
 
         printf("Student with Roll No %d deleted.\n", roll);
+        saveStudentsToFile(students, size);
     }
     else 
     {
         printf("Student with Roll No %d not found.\n", roll);
     }
+}
+
+void saveStudentsToFile(const struct Student students[], int size)
+{
+    FILE *file = fopen(DATA_FILE, "wb");
+    if (file == NULL)
+    {
+        perror("Error opening file for writing");
+        return;
+    }
+    fwrite(students, sizeof(struct Student), size, file);
+    fclose(file);
+}
+
+void loadStudentsFromFile(struct Student students[], int size)
+{
+    FILE *file = fopen(DATA_FILE, "rb");
+    if (file == NULL)
+    {
+        // File doesn't exist
+        return;
+    }
+    fread(students, sizeof(struct Student), size, file);
+    fclose(file);
 }
