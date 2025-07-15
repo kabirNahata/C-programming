@@ -11,8 +11,8 @@ struct Student {
 // Declare global variables
 struct Student students[100]; // array of student records
 
-
 // Function prototypes
+void initializeStudents();
 void addStudent();
 void viewStudents();
 void searchStudent();
@@ -21,8 +21,16 @@ void menu();
 
 int main() 
 {
-    menu(); // call the main menu function
+    initializeStudents();  // Initialize all roll numbers to -1 (sentinel)
+    menu();                // Call the main menu
     return 0;
+}
+
+// Initialize all student roll numbers to -1 (sentinel)
+void initializeStudents() {
+    for (int i = 0; i < 100; i++) {
+        students[i].roll = -1;
+    }
 }
 
 // Menu function with do-while and switch-case
@@ -59,18 +67,28 @@ void menu()
                 break;
             default:
                 printf("Invalid choice. Try again.\n");
-                // Using goto to return to menu (not ideal in real projects, but shown here for learning)
                 goto end_of_loop;
         };
 
-    } while (choice != 5); // do-while loop to repeat menu
+    } while (choice != 5);
 }
 
 // Function to add a student record
 void addStudent() 
 {
-    int space = sizeof(students);
-    if (space >= 100) 
+    int index = -1;
+
+    // Find the first available (empty) slot
+    for (int i = 0; i < 100; i++) 
+    {
+        if (students[i].roll == -1) 
+        {
+            index = i;
+            break;
+        }
+    }
+
+    if (index == -1) 
     {
         printf("Cannot add more students. Maximum limit reached.\n");
         return;
@@ -78,47 +96,52 @@ void addStudent()
 
     printf("\n--- Add Student ---\n");
     printf("Enter Roll Number: ");
-    scanf("%d", &students[space].roll);
+    scanf("%d", &students[index].roll);
     getchar(); // clear newline from buffer
 
     printf("Enter Name: ");
-    fgets(students[space].name, sizeof(students[space].name), stdin);
-    students[space].name[strcspn(students[space].name, "\n")] = 0; // remove newline
+    fgets(students[index].name, sizeof(students[index].name), stdin);
+    students[index].name[strcspn(students[index].name, "\n")] = 0;
 
     printf("Enter Course: ");
-    fgets(students[space].course, sizeof(students[space].course), stdin);
-    students[space].course[strcspn(students[space].course, "\n")] = 0; // remove newline
+    fgets(students[index].course, sizeof(students[index].course), stdin);
+    students[index].course[strcspn(students[index].course, "\n")] = 0;
+
     printf("Student added successfully.\n");
 }
 
 // Function to view all student records
 void viewStudents() {
     printf("\n--- Student List ---\n");
-    int no_student = sizeof(students) ;
-    if (no_student == 0) {
-        printf("No student records available.\n");
-        return;
-    }
+    int found = 0;
 
-    for (int i = 0; i < no_student; i++) {
+    for (int i = 0; i < 100; i++) {
+        if (students[i].roll == -1) {
+            break;
+        }
+
+        found = 1;
         printf("\nStudent %d:\n", i + 1);
         printf("Roll No: %d\n", students[i].roll);
         printf("Name   : %s\n", students[i].name);
         printf("Course : %s\n", students[i].course);
+    }
+
+    if (!found) {
+        printf("No student records available.\n");
     }
 }
 
 // Function to search a student by roll number
 void searchStudent() 
 {
-    int student_list = sizeof(students);
     int roll;
     int found = 0;
 
     printf("\nEnter Roll Number to search: ");
     scanf("%d", &roll);
 
-    for (int i = 0; i < student_list; i++) {
+    for (int i = 0; i < 100 && students[i].roll != -1; i++) {
         if (students[i].roll == roll) {
             printf("\nStudent Found:\n");
             printf("Roll No: %d\n", students[i].roll);
@@ -135,27 +158,72 @@ void searchStudent()
 }
 
 // Function to delete a student by roll number
-void deleteStudent() 
+// void deleteStudent() 
+// {
+//     int roll;
+//     printf("\nEnter Roll Number to delete: ");
+//     scanf("%d", &roll);
+
+//     int found = 0;
+//     for (int i = 0; i < 100 && students[i].roll != -1; i++) {
+//         if (students[i].roll == roll) {
+//             // Shift remaining records left
+//             for (int j = i; j < 99 && students[j + 1].roll != -1; j++) {
+//                 students[j] = students[j + 1];
+//             }
+//             // Clear the last used record
+//             students[99].roll = -1;
+//             strcpy(students[99].name, "");
+//             strcpy(students[99].course, "");
+
+//             found = 1;
+//             printf("Student with Roll No %d deleted.\n", roll);
+//             break;
+//         }
+//     }
+
+//     if (!found) {
+//         printf("Student not found.\n");
+//     }
+// }
+
+
+void deleteStudent() //delete function with value shifting and checking for the last value deletion
 {
-    int remaining_student = sizeof(students);
     int roll;
     printf("\nEnter Roll Number to delete: ");
     scanf("%d", &roll);
 
     int found = 0;
-    for (int i = 0; i < remaining_student; i++) {
+    for (int i = 0; i < 100 && students[i].roll != -1; i++) {
         if (students[i].roll == roll) {
-            // Shift all remaining students left by 1
-            for (int j = i; j < remaining_student - 1; j++) {
-                students[j] = students[j + 1];
-            }
             found = 1;
+
+            // Check if the next student is valid
+            if (students[i + 1].roll != -1) {
+                // Shift students left from i to the last valid entry
+                for (int j = i; j < 99 && students[j + 1].roll != -1; j++) {
+                    students[j] = students[j + 1];
+                }
+
+                // Clear the last valid slot after shifting
+                students[99].roll = -1;
+                strcpy(students[99].name, "");
+                strcpy(students[99].course, "");
+            } else {
+                // It's the last student, just clear it
+                students[i].roll = -1;
+                strcpy(students[i].name, "");
+                strcpy(students[i].course, "");
+            }
+
             printf("Student with Roll No %d deleted.\n", roll);
             break;
         }
     }
 
     if (!found) {
-        printf("Student not found.\n");
+        printf("Student with Roll No %d not found.\n", roll);
     }
 }
+

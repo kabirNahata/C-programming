@@ -1,37 +1,25 @@
 #include <stdio.h>
 #include <string.h>
 
-// Define a structure to store student data
 struct Student {
     int roll;
     char name[50];
     char course[30];
 };
 
-// Declare global variables
-struct Student students[100]; // array of student records
-
-
 // Function prototypes
-void addStudent();
-void viewStudents();
-void searchStudent();
-void deleteStudent();
+int addStudent(struct Student students[], int count);
+void viewStudents(struct Student students[], int count);
+void searchStudent(struct Student students[], int count);
+int deleteStudent(struct Student students[], int count);
 void menu();
 
-int main() 
-{
-    menu(); // call the main menu function
-    return 0;
-}
-
-// Menu function with do-while and switch-case
-void menu() 
-{
+int main() {
+    struct Student students[100];
+    int count = 0;
     int choice;
-    
+
     do {
-        end_of_loop:
         printf("\n--- Student Record Management System ---\n");
         printf("1. Add Student\n");
         printf("2. View All Students\n");
@@ -40,67 +28,67 @@ void menu()
         printf("5. Exit\n");
         printf("Enter your choice: ");
         scanf("%d", &choice);
+        getchar(); // Clear newline
 
         switch (choice) {
             case 1:
-                addStudent();
+                count = addStudent(students, count);
                 break;
             case 2:
-                viewStudents();
+                viewStudents(students, count);
                 break;
             case 3:
-                searchStudent();
+                searchStudent(students, count);
                 break;
             case 4:
-                deleteStudent();
+                count = deleteStudent(students, count);
                 break;
             case 5:
                 printf("Exiting program. Goodbye!\n");
                 break;
             default:
                 printf("Invalid choice. Try again.\n");
-                // Using goto to return to menu (not ideal in real projects, but shown here for learning)
-                goto end_of_loop;
-        };
+        }
 
-    } while (choice != 5); // do-while loop to repeat menu
+    } while (choice != 5);
+
+    return 0;
 }
 
-// Function to add a student record
-void addStudent() 
+int addStudent(struct Student students[], int count) 
 {
-    int space = sizeof(students);
-    if (space >= 100) 
-    {
+    if (count >= 100) {
         printf("Cannot add more students. Maximum limit reached.\n");
-        return;
+        return count;
     }
 
     printf("\n--- Add Student ---\n");
     printf("Enter Roll Number: ");
-    scanf("%d", &students[space].roll);
-    getchar(); // clear newline from buffer
+    scanf("%d", &students[count].roll);
+    getchar(); // clear newline
 
     printf("Enter Name: ");
-    fgets(students[space].name, sizeof(students[space].name), stdin);
-    students[space].name[strcspn(students[space].name, "\n")] = 0; // remove newline
+    fgets(students[count].name, sizeof(students[count].name), stdin);
+    students[count].name[strcspn(students[count].name, "\n")] = 0;
 
     printf("Enter Course: ");
-    fgets(students[space].course, sizeof(students[space].course), stdin);
-    students[space].course[strcspn(students[space].course, "\n")] = 0; // remove newline
+    fgets(students[count].course, sizeof(students[count].course), stdin);
+    students[count].course[strcspn(students[count].course, "\n")] = 0;
+
     printf("Student added successfully.\n");
+    return count + 1;
 }
 
-// Function to view all student records
-void viewStudents() {
+void viewStudents(struct Student students[], int count) 
+{
     printf("\n--- Student List ---\n");
-    int no_student = sizeof(students) ;
-    if (no_student == 0) {
+
+    if (count == 0) {
         printf("No student records available.\n");
         return;
     }
 
-    for (int i = 0; i < no_student; i++) {
+    for (int i = 0; i < count; i++) {
         printf("\nStudent %d:\n", i + 1);
         printf("Roll No: %d\n", students[i].roll);
         printf("Name   : %s\n", students[i].name);
@@ -108,17 +96,15 @@ void viewStudents() {
     }
 }
 
-// Function to search a student by roll number
-void searchStudent() 
+void searchStudent(struct Student students[], int count) 
 {
-    int student_list = sizeof(students);
     int roll;
     int found = 0;
 
     printf("\nEnter Roll Number to search: ");
     scanf("%d", &roll);
 
-    for (int i = 0; i < student_list; i++) {
+    for (int i = 0; i < count; i++) {
         if (students[i].roll == roll) {
             printf("\nStudent Found:\n");
             printf("Roll No: %d\n", students[i].roll);
@@ -134,28 +120,26 @@ void searchStudent()
     }
 }
 
-// Function to delete a student by roll number
-void deleteStudent() 
+int deleteStudent(struct Student students[], int count) 
 {
-    int remaining_student = sizeof(students);
-    int roll;
+    int roll, found = 0;
     printf("\nEnter Roll Number to delete: ");
     scanf("%d", &roll);
 
-    int found = 0;
-    for (int i = 0; i < remaining_student; i++) {
+    for (int i = 0; i < count; i++) {
         if (students[i].roll == roll) {
-            // Shift all remaining students left by 1
-            for (int j = i; j < remaining_student - 1; j++) {
+            for (int j = i; j < count - 1; j++) {
                 students[j] = students[j + 1];
             }
-            found = 1;
             printf("Student with Roll No %d deleted.\n", roll);
-            break;
+            found = 1;
+            return count - 1;
         }
     }
 
     if (!found) {
         printf("Student not found.\n");
     }
+
+    return count;
 }
