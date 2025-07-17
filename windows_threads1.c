@@ -27,5 +27,5 @@ int main() {
     pthread_join(t2, NULL);
 
     printf("Main thread finished.\n");
-    return 0;
+    return 0;
 }
